@@ -1,7 +1,10 @@
+
+addCompilerPlugin("org.spire-math" %% "kind-projector" % "0.9.8")
+
 lazy val root = (project in file(".")).settings(
   name := "cats-example",
 
-  //Partial unification should be on to improve type inference
+    //Partial unification should be on to improve type inference
   scalacOptions += "-Ypartial-unification",
   libraryDependencies += "org.typelevel" %% "cats-core" % "1.5.0",
   libraryDependencies += "org.typelevel" %% "cats-kernel" % "1.5.0",

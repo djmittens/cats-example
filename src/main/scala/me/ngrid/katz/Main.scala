@@ -25,7 +25,7 @@ object Main extends IOApp
 
 trait RepositorySettings {
   self: DatabaseSettings =>
-  lazy val dataRepository: DataRepository[IO] = new DataRepository[IO](self.sqlite)
+  lazy val dataRepository: SqlRepository[IO] = new SqlRepository[IO](self.sqlite)
 }
 
 trait DatabaseSettings {
@@ -37,17 +37,4 @@ trait DatabaseSettings {
   )
 }
 
-class DataRepository[F[_] : Monad](db: Transactor[F]) {
-  val drop: F[Unit] = {
-    sql"""DROP TABLE IF EXISTS person""".
-      update.run.transact(db) *> Monad[F].unit
-  }
 
-  val create: F[Unit] = {
-    sql"""CREATE TABLE person(
-         |name TEXT NOT NULL UNIQUE,
-         |age INTEGER
-         |)""".stripMargin.
-      update.run.transact(db) *> Monad[F].unit
-  }
-}
