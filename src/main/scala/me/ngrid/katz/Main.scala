@@ -1,9 +1,13 @@
 package me.ngrid.katz
 
-import cats.Monad
-import cats.effect.{ExitCode, IO, IOApp}
+import java.nio.ByteBuffer
+import java.nio.charset.StandardCharsets
+
+import cats.{Applicative, Monad}
+import cats.effect._
 import doobie.util.transactor.Transactor
 import cats.implicits._
+import cats.data.Kleisli
 import doobie.implicits._
 import doobie._
 
@@ -17,7 +21,7 @@ object Main extends IOApp
     IO {
       println("Hello World !!!!!")
       ExitCode.Success
-    } <* dataRepository.drop <* (for {
+    } <* dataRepository.delete <* (for {
       _ <- dataRepository.create
     } yield ())
   }
@@ -25,16 +29,24 @@ object Main extends IOApp
 
 trait RepositorySettings {
   self: DatabaseSettings =>
-  lazy val dataRepository: SqlRepository[IO] = new SqlRepository[IO](self.sqlite)
+
+
+  lazy val dataRepository: SqlRepository[IO, InboundFile] = new SqlRepository[IO, InboundFile](self.sqlite)
+
+  def fileRepository[F[_]: Monad]: Kleisli[F, Transactor[F], SqlRepository[F, InboundFile]] = Kleisli {
+    t => new SqlRepository(t).pure
+  }
 }
 
 trait DatabaseSettings {
   //  implicit val
   implicit val cs = cats.effect.IO.contextShift(ExecutionContext.global)
 
-  lazy val sqlite = Transactor.fromDriverManager[IO](
-    "org.sqlite.JDBC", "jdbc:sqlite:sample.db", "", ""
-  )
+  def sqlite[F[_]: Monad: Async: ContextShift]: Kleisli[F, Unit, Transactor[F]] = Kleisli.pure {
+    Transactor.fromDriverManager[F](
+      "org.sqlite.JDBC", "jdbc:sqlite:sample.db", "", ""
+    )
+  }
 }
 
 

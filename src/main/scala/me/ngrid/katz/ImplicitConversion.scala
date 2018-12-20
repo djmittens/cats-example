@@ -16,5 +16,4 @@ trait ImplicitConversionSyntax {
 
   implicit def funConverter[F[_] : Functor, T, U](implicit con: T >:> U): F[T] >:> F[U] = v => v.map(con.apply)
 
-//  implicit def NopConversion[T, U](implicit ev: T =:= U): T >:> U = v => v
 }
